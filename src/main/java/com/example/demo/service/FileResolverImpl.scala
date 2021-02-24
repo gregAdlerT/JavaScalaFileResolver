@@ -1,11 +1,13 @@
 package com.example.demo.service
 
-import scala.collection.JavaConverters.asJavaCollectionConverter
+import java.io.PrintWriter
+
 import com.example.demo.dao.{DataModel, DataRepo}
 import org.springframework.beans.factory.annotation.{Autowired, Value}
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
+import scala.io.Source
 
 /**
  * @author Greg Adler
@@ -17,16 +19,16 @@ import org.springframework.web.client.RestTemplate
                                   val repo: DataRepo) extends FileResolver {
 
 
-  var content: String = null
+  var filePath: String = "./content.txt"
   
   override def uploadFile(): Unit = {
-    content = restTemplate.getForObject(fileUrl, classOf[String])
-    println(content)
+    val content = restTemplate.getForObject(fileUrl, classOf[String])
+    Some(new PrintWriter(filePath)).foreach{p => p.write(content); p.close()}
   }
 
   @Transactional
   override def processFile(): Unit = {
-    val listOfModels = content.split(", ").map { s =>
+    val listOfModels = Source.fromFile(filePath).mkString.split(", ").map { s =>
       var model = new DataModel()
       model.setContent(s)
       model

@@ -5,11 +5,17 @@ import com.example.demo.dao.DataModel;
 import com.example.demo.dao.DataRepo;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
@@ -22,23 +28,30 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
-//@ContextConfiguration(classes = DemoApplication.class)
 class FileResolverImplTest {
+
+    private static String content="Some, text, was, uploaded";
+    
     @Autowired
     private   DataRepo repo;
-    private String content="Some, text, was, uploaded";
-    private  RestTemplate restTemplateMock=Mockito.mock(RestTemplate.class);
-    private  FileResolver service=new FileResolverImpl("",restTemplateMock, repo);
+    @MockBean
+    private RestTemplate restTemplateMock;
+    @Autowired
+    private  FileResolver service;
+    
+    @BeforeEach
+    public void init(){
+        Mockito.when(restTemplateMock.getForObject("http://fff", String.class)).thenReturn(content);
+    }
 
 
     @Test
     void uploadFile() {
-        Mockito.when(restTemplateMock.getForObject("", String.class)).thenReturn(content);
         service.uploadFile();
     }
 
     @Test
-    void processFile() {
+    void processFile() {       
         service.processFile();
         Iterable<DataModel> actual = repo.findAll();
         String[] contentArr = content.split(", ");
